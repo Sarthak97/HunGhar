@@ -6,7 +6,8 @@ var express = require("express"),
     flash = require("connect-flash"),
     LocalStrategy = require("passport-local"),
     User = require("./models/user"),
-    Request = require("./models/request");
+    Request = require("./models/request"),
+    flag = "";
 
 //mongoose.Promise = global.Promise;
 // mongoose.connect(process.env.DATABASEURL,{useMongoClient: true});
@@ -93,37 +94,59 @@ app.post("/success", function(req, res){
         }
     });
 });
+
+app.get("/success/:id",function(req,res){
+    Blog.findById(req.params.id, function(err, foundBlog){
+       if(err){
+           res.redirect("/success");
+       } else {
+           res.render("show", {blog: foundBlog});
+       }
+   })
+});
+
+
 //requests
-app.get("/form", isLoggedInNGO,function(req,res){
-    //console.log(req);
-    res.render("form1");
-});
-
-app.get("/form", isLoggedInDonor,function(req,res){
-    //console.log(req);
-    res.render("form2");
+app.get("/form", isLoggedIn,function(req,res){
+    if(flag === "NGO")
+        res.render("form1");
+    else
+        res.render("form2");
 });
 
 
-app.post("/form1", isLoggedInNGO,function(req,res)
+app.post("/form1", isLoggedIn,function(req,res)
 {
-    var request = new Request({claim: 'NGO', type: req.body.type,  amount : req.body.amt});
+    if(flag === "NGO")
+        var request = new Request({claim: 'NGO', type: req.body.type,  amount : req.body.amt});
+    else
+        var request = new Request({claim: 'Donor', type: req.body.type,  amount : req.body.amt});
     request.save(function(err,req1) 
     {
         if(err)
             console.log(err);
-        else
-            console.log(req1);
     });
+    if(flag === "NGO")
+    {
+        Request.find({'claim': 'Donor', 'type': req.body.type, 'amount' : req.body.amt}, function(err, ret){
+            if(err)
+                console.log(err);
+            else
+            {
+                if(ret != null)
+                {
+                    console.log(ret);
+                    //res.send("<h2>We are ready to serve you. Go to your nearest pickup point.<h2>");
+                    res.redirect("/locate");
+                }
+                else
+                    res.redirect("/home");
+            }
+        });
+    }
+    else
+        res.redirect("/home");
 });
-
-app.post("/form1", isLoggedInDonor,function(req,res)
-{
-    var request = new Request({claim: 'Donor', type: req.body.type,  amount : req.body.amt});
-    
-});
-
-
 
 
 
@@ -148,6 +171,7 @@ app.post("/login", passport.authenticate("local",
         failureFlash : "Invalid Credentials",
         successFlash : "Welcome!"
     }), function(req,res){
+        //console.log(res);
 });
 
 
@@ -182,6 +206,7 @@ app.post("/signup",function(req,res){
 app.get("/logout", function(req, res){
     req.logout();
     req.flash("success", "Logged you out!");
+    flag = "";
     res.redirect("/home");
 });
 
@@ -190,32 +215,20 @@ passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
 
 //Middleware
-function isLoggedInNGO(req, res, next){
-    //console.log(req);
-    if(req.isAuthenticated() && req.user.type === "NGO"){
-        return next();
-    }
-    req.flash("error","Please login first!")
-    res.redirect("/login");
-}
 
 function isLoggedIn(req, res, next){
     //console.log(req);
     if(req.isAuthenticated()){
+        if(req.user.type === "NGO")
+            flag = "NGO";
+        else
+            flag = "Donor";
         return next();
     }
     req.flash("error","Please login first!")
     res.redirect("/login");
 }
 
-function isLoggedInDonor(req, res, next){
-    //console.log(req);
-    if(req.isAuthenticated() && req.user.type === "Donor"){
-        return next();
-    }
-    req.flash("error","Please login first!")
-    res.redirect("/login");
-}
 
 app.listen(process.env.PORT,process.env.IP,function(){
     console.log("Server Started.");
