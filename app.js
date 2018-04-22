@@ -114,6 +114,11 @@ app.get("/form", isLoggedIn,function(req,res){
         res.render("form2");
 });
 
+app.get("/estimate", isLoggedIn,function(req,res){
+    if(flag === "Donor")
+        res.render("estimator");
+});
+
 
 app.post("/form1", isLoggedIn,function(req,res)
 {
