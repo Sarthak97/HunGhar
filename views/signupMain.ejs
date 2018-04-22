@@ -1,0 +1,21 @@
+<% include partials/header %>
+
+<div class="row" style="width:100%; height:100%;">
+    <h1 style="text-align: center; margin-top:50px;">Sign Up As</h1>
+    <div style="width: 30%; margin: 25px auto;">
+    
+        <form action="/signup/NGO" method="GET">
+        <div class="form-group">
+            <button class="btn btn-lg btn-primary btn-block">NGO Sign Up</button>
+        </div>
+        </form>
+        <form action="/signup/Donor" method="GET">
+        <div class="form-group">
+            <button class="btn btn-lg btn-primary btn-block">Food Donor Sign up</button>
+        </div>
+        </form>
+            
+        <p id ="p2">Already a member? <span id ="login"><a href="../login">Login</a></span></p>
+        </div>  
+</div>
+<% include partials/footer %>
